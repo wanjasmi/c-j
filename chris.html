@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Just+Me+Again+Down+Here&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
+    <title>Interactive Cat Website</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Just Me Again Down Here", serif;
+            font-size: normal;
+            text-align: center;
+            background-color: #f9daef;
+            overflow: hidden;
+        }
+        #cat {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            transition: left 0.1s;
+            width: 150px;
+            height: auto;
+        }
+        #countdown-container {
+            position: absolute;
+            bottom: 350px;
+            width: 100%;
+            font-size: 2em;
+            color: #c64643;
+        }
+        #message-container {
+            position: absolute;
+            bottom: 120px;
+            width: 100%;
+            font-size: 2em;
+            color: #333;
+        }
+        #date-container {
+            margin-top: 10px;
+            font-size: 3em;
+            color: #444;
+        }
+        #input-container {
+            position: fixed;
+            bottom: 180px;
+            width: 100%;
+    
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            font-size: 1.2em;
+            font-family: "Comic Neue", serif;
+        }
+        button {
+            padding: 10px;
+            font-size: 1em;
+            margin-left: 5px;
+            font-family: "Comic Neue", serif;
+        }
+        .heart {
+            position: absolute;
+            animation: floatUp 2s linear forwards;
+            color: red;
+        }
+        @keyframes floatUp {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(-100px); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="date-container"></div>
+    <div id="countdown-container"></div>
+    <div id="message-container"></div>
+    <img id="cat" src="idle.png" alt="Cat">
+    <div id="input-container">
+        <input id="user-message" type="text" placeholder="Write a message to Bubuya">
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="clearAllTexts()">Clear All Texts</button>
+    </div>
+
+    <script>
+        // Constants
+        const CALIFORNIA_OFFSET = -8; // PST
+        const SPECIAL_DATES = {
+            '12/19': `<div>Happy birthday Bubuya! Wishing you the happiest birthday with all my love, kisses, and hugs.<br><img src='birthday_image.png' alt='Birthday Celebration' style='width:150px; height:auto; margin-bottom: -150px;'</div>`,
+            '3/24': "Catching up to you! Just grew a little older with you by my side.",
+            '4/11': "Bubuya 4L! Another year of beautiful memories with you. Same time next year?",
+            '2/14': "My valentine forever <3",
+        };
+        const START_DATE = new Date('2022-04-11');
+
+        // State variables
+        let lastInteractionTime = new Date();
+        let stage = "idle";
+        let stageMessages = {
+            idle: ["lobu❤️❤️❤️", "Yayo!!!", "just chillinggg", "Missing you a little extra right now!", "guess what I am doing?", "♪Labubu♪Labulabulabubu♪Labubu♪"],
+            sleep: ["Zzz...", "eepy time...", "*pretends to cuddle with baby*"],
+            eat: ["Craving some boba right now", "I want qq jelly!", "What did baby have for dinner?", "Let's make beef egg rice together soonah", "army stew sounds fiya right now..."],
+            play: ["Let’s play!", "brawling :D", "HOP ONNNN"]
+        };
+
+        // Elements
+        const catElement = document.getElementById('cat');
+        const messageContainer = document.getElementById('message-container');
+        const countdownContainer = document.getElementById('countdown-container');
+        const dateContainer = document.getElementById('date-container');
+
+        // Update Date and Countdown
+        function updateDateAndCountdown() {
+            const now = new Date();
+            const californiaTime = new Date(now.getTime() + (now.getTimezoneOffset() + CALIFORNIA_OFFSET * 60) * 60000);
+            const daysSinceStart = Math.floor((californiaTime - START_DATE) / (1000 * 60 * 60 * 24));
+            dateContainer.innerHTML = `Today is ${californiaTime.toDateString()}<br>We have been together for ${daysSinceStart} days!`;
+
+            for (const [date, message] of Object.entries(SPECIAL_DATES)) {
+                const [month, day] = date.split('/').map(Number);
+                const specialDate = new Date(californiaTime.getFullYear(), month - 1, day);
+                const timeUntilSpecial = specialDate - californiaTime;
+
+                if (timeUntilSpecial <= 24 * 60 * 60 * 1000 && timeUntilSpecial > 0) {
+                    // Show countdown during the 24-hour period before the special date
+                    const hours = Math.floor(timeUntilSpecial / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeUntilSpecial % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeUntilSpecial % (1000 * 60)) / 1000);
+                    countdownContainer.innerHTML = `Countdown: ${hours}h ${minutes}m ${seconds}s`;
+                } else if (timeUntilSpecial <= 0 && timeUntilSpecial > -24 * 60 * 60 * 1000) {
+                    // Show the special message on the special date
+                    countdownContainer.innerHTML = message;
+                }
+            }
+        }
+        setInterval(updateDateAndCountdown, 1000);
+
+        // Update Cat Stage
+        function updateStage() {
+            const stages = ["idle", "sleep", "eat", "play"];
+            stage = stages[Math.floor(Math.random() * stages.length)];
+            catElement.src = `${stage}.png`;
+        }
+        setInterval(updateStage, Math.random() * (5*60*1000 - 1*60*1000)+1*60*1000); 
+
+        // Mouse Movement
+        document.addEventListener('mousemove', (event) => {
+            catElement.style.left = `${event.clientX}px`;
+        });
+
+        // Interaction Logic
+        document.addEventListener('click', (event) => {
+            if (event.button === 0) {
+                // Left mouse button
+                catElement.src = "happy.png";
+                createHearts(event.clientX, event.clientY);
+                setTimeout(() => { catElement.src = `${stage}.png`; }, 3000);
+                lastInteractionTime = new Date();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                const randomMessage = stageMessages[stage][Math.floor(Math.random() * stageMessages[stage].length)];
+                messageContainer.innerText = randomMessage;
+                setTimeout(()=> {messageContainer.innerText = ''; }, 5000);
+            }
+        });
+
+        // Heart Effect
+        function createHearts(x, y) {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.style.left = `${x}px`;
+            heart.style.top = `${y}px`;
+            heart.innerText = "❤️";
+            document.body.appendChild(heart);
+            setTimeout(() => { heart.remove(); }, 2000);
+        }
+
+        const MAX_TEXTS = 30;
+        const textElements = [];
+
+        function displayRandomText(message){
+            const textElement = document.createElement('div');
+            textElement.innerText = message;
+            textElement.className = 'message';
+            textElement.style.position = 'absolute';
+            textElement.style.color = '#333';
+            textElement.style.fontSize = `${Math.random() * (2-1) +1}em`;
+            textElement.style.left = `${Math.random() * (window.innerWidth - 200)}px`;
+            textElement.style.top = `${Math.random() * (window.innerHeight - 100)}px`;
+            document.body.appendChild(textElement);
+
+            textElements.push(textElement);
+
+            while (textElements.length > MAX_TEXTS) {
+                const oldestText = textElements.shift();
+                if (oldestText){
+                    oldestText.remove();
+                }
+            }
+            saveMessagesToStorage();
+        }
+
+        function saveMessagesToStorage(){
+            const savedMessages = textElements.map(el => ({
+                message: el.innerText,
+                left: el.style.left,
+                top: el.style.top,
+                timestamp: new Date().getTime()
+            }));
+            localStorage.setItem('catMessages', JSON.stringify(savedMessages));
+        }
+
+        function loadMessagesFromStorage(){
+            const savedMessages = JSON.parse(localStorage.getItem('catMessages')) || [];
+            const now = new Date().getTime();
+            const filteredMessages = savedMessages.filter(({timestamp}) => {
+                return now - timestamp <= 24 * 60 * 1000;
+            });
+            textElements.length = 0;
+            filteredMessages.forEach(({ message, left, top, timestamp }) => {
+                const textElement = document.createElement('div');
+                textElement.innerText = message;
+                textElement.className = 'message';
+                textElement.style.position = 'absolute';
+                textElement.style.color = '#333';
+                textElement.style.fontSize = `${Math.random() * (2-1) +1}em`;
+                textElement.style.left = left;
+                textElement.style.top = top;
+                document.body.appendChild(textElement);
+                textElements.push(textElement);
+            });
+
+            localStorage.setItem('catMessages', JSON.stringify(filteredMessages));
+        }
+
+        window.onload = function(){
+            loadMessagesFromStorage();
+        }
+
+        // Send Message
+        function sendMessage() {
+            const input = document.getElementById('user-message');
+            const message = input.value;
+            if (message) {
+                displayRandomText(message);
+                input.value = '';
+            }
+        }
+
+        function clearAllTexts() {
+    // Remove all text elements from the screen
+            document.querySelectorAll('.message').forEach((textElement) => {
+                textElement.remove();
+            });
+
+    // Clear the local storage and the in-memory textElements array
+            localStorage.removeItem('catMessages');
+            textElements.length = 0; // Empty the array
+        }
+
+        function cleanupOldMessages() {
+            const now = new Date().getTime();
+            const savedMessages = JSON.parse(localStorage.getItem('catMessages')) || [];
+
+            // Filter messages to keep only those less than 24 hours old
+            const filteredMessages = savedMessages.filter(({ message, left, top, timestamp }) => {
+                return now - timestamp <= 24 * 60 * 60 * 1000; // Check if within 24 hours
+            });
+
+            // Clear existing messages from the DOM
+            document.querySelectorAll('.message').forEach((messageElement) => {
+                messageElement.remove();
+            });
+
+            // Re-add valid messages to the DOM and update `textElements`
+            textElements.length = 0; // Clear the array
+            filteredMessages.forEach(({ message, left, top }) => {
+                const textElement = document.createElement('div');
+                textElement.innerText = message;
+                textElement.className = 'message';
+                textElement.style.position = 'absolute';
+                textElement.style.color = '#333';
+                textElement.style.fontSize = `${Math.random() * (2-1) +1}em`;
+                textElement.style.left = left;
+                textElement.style.top = top;
+                document.body.appendChild(textElement);
+                textElements.push(textElement);
+            });
+
+            // Save filtered messages back to localStorage
+            localStorage.setItem('catMessages', JSON.stringify(filteredMessages));
+        }
+
+        // Run cleanup every hour
+        setInterval(cleanupOldMessages, 60 * 60 * 1000); // Execute every hour
+
+
+
+    </script>
+</body>
+</html>
