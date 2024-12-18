@@ -193,6 +193,9 @@
                 catElement.src = "happy.png";
                 createHearts(event.clientX, event.clientY);
                 setTimeout(()=> {catElement.src = `${stage}.png`;}, 3000);
+                const randomMessage = stageMessages[stage][Math.floor(Math.random() * stageMessages[stage].length)];
+                messageContainer.innerText = randomMessage;
+                setTimeout(()=> {messageContainer.innerText = ''; }, 5000);
                 lastInteractionTime = new Date();
             }
         });
